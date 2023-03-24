@@ -29,6 +29,6 @@ func main() {
     c := make(chan string)
     go kastare(c)
     go fångare(c)
-    select {} // För att go-rutinerna ska hinna köras
+    select {} // För att inte lämna main()
 }
 
