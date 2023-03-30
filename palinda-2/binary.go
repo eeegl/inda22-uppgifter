@@ -9,7 +9,7 @@ package main
 func printRandomBinary() {
 	// TODO: generera en slumpad sekvens av ettor och nollor
 	// TODO: printa sekvensen
-	// TOOD (extra): printa varje tal ett i taget, med en kort paus mellan varje
+        // TODO: (extra) printa varje tal ett i taget, med en kort paus mellan varje
 }
 
 func main()  {
