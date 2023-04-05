@@ -223,7 +223,7 @@ Under headern för `main()` ser vi en rad med minustecken och en med plustecken 
 
 Ändringen ser bra ut så vi lägger till den med `git add`!...
 
-...men när vi tänker efter var det nog faktiskt bättre som det var innan, så vi vill ändra tillbaka till hur det var vid vår senaste incheckning. Hur gör vi det? Med `git reset --hard`! 
+...men när vi tänker efter var det nog faktiskt bättre som det var innan, så vi vill ändra tillbaka till hur det var vid vår senaste incheckning. Hur gör vi det? Med `git reset --hard`! Testa att köra kommandot och kontrollera sedan att `HelloGit.java` har återställts.
 
 > Tips: `git reset --hard` rensar alla ändringar och går tillbaka till senaste incheckningen, vilket kan vara skönt om du vet att inte vill spara de senaste ändringarna. Men var försiktigt så att du inte råkar radera fler ändringar än du hade planerat, kommandot går inte att ångra!
 
