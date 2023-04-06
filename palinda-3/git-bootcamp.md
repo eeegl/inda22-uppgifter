@@ -11,6 +11,13 @@ Den här texten går igenom hur vi skapar ett Git-repo och uppdaterar förändri
     * [`README.md` och kompakt vy](#readmemd-och-kompakt-vy)
     * [Ångra och gå tillbaka till senaste commit](#ångra-och-gå-tillbaka-till-senaste-commit)
     * [Tillägg till senaste commit](#tillägg-till-senaste-commit)
+* [Städat repo och förgrening](#städat-repo-och-förgrening)
+    * [Strunta i filer listade i `.gitignore`](#strunta-i-filer-listade-i-gitignore)
+    * [Förgrening](#förgrening)
+    * [Merge conflict](#merge-conflict)
+* [Vidare läsning](#vidare-läsning)
+
+> *Sektionen "Städat repo och förgrening" är skriven av Mathias Grindsäter, som även har bidragit till resten av texten.*
 
 ## Grunder
 
@@ -223,7 +230,7 @@ Under headern för `main()` ser vi en rad med minustecken och en med plustecken 
 
 Ändringen ser bra ut så vi lägger till den med `git add`!...
 
-...men när vi tänker efter var det nog faktiskt bättre som det var innan, så vi vill ändra tillbaka till hur det var vid vår senaste incheckning. Hur gör vi det? Med `git reset --hard`! Testa att köra kommandot och kontrollera sedan att `HelloGit.java` har återställts.
+...men när vi tänker efter var det nog faktiskt bättre som det var innan, så vi vill ändra tillbaka till hur det var vid vår senaste incheckning. Hur gör vi det? Med `git reset --hard`! 
 
 > Tips: `git reset --hard` rensar alla ändringar och går tillbaka till senaste incheckningen, vilket kan vara skönt om du vet att inte vill spara de senaste ändringarna. Men var försiktigt så att du inte råkar radera fler ändringar än du hade planerat, kommandot går inte att ångra!
 
@@ -247,7 +254,285 @@ git add HelloGit.java
 git commit --amend
 ```
 
-### Vidare läsning
+## Städat repo och förgrening
+
+### Strunta i filer listade i `.gitignore`
+I ditt repo, skapa en ny fil `GitImportance.java` och kopiera in följande kod till filen.
+```java
+import java.util.*;
+
+public class GitImportance{ 
+    public static void main(String[] args) {
+        StringBuilder s = new StringBuilder();
+        s.append("Git allows for version control, making it difficult to track changes in code.\n");
+        s.append("With Git, only one developer can collaborate on a codebase ");
+        s.append("without interfering with each other's work.\n");
+        
+        System.out.println(s.toString());
+    }
+}
+```
+
+Kompilera och kör `GitImportance.java` och se till att den faktiskt skriver ut
+innehållet till terminalen.
+
+Vår nya fil är dock ospårad. Som vi nu har lärt oss kan vi se detta genom att
+i terminalen skriva 
+
+```bash
+git status
+``` 
+
+Där bör vi se något som ser ut ungefär såhär:
+
+```bash
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	GitImportance.class
+	GitImportance.java
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+Vill vi verkligen behöva ta hänsyn till `.class`-filen? Vi kan skapa en fil
+`.gitignore`. Då kan vi säga till Git att ignorera vissa filer.
+Skapa filen genom att skriva 
+``` bash
+touch .gitignore
+```
+
+Öppna filen och skriv in följande:
+```back
+### JAVA ###
+*.class
+```
+
+Kör `git status` i terminalen. Det borde se ut ungefär såhär:
+```bash
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.gitignore
+	GitImportance.java
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+Vår .class-fil är borta! Git ignorerar nu alla .class-filer. Vi har 
+fått ett nytt tillskott `.gitignore`, men denna vill vi ha med oss i fortsättningen!
+
+Skriv nu i terminalen. 
+
+```bash
+git add .gitignore GitImportance.java
+
+git commit -m "lägger till .gitignore and GitImportance.java"
+```
+
+Kör sedan `git status`. I terminalen ska det nu stå:
+```bash
+On branch master
+nothing to commit, working tree clean
+```
+
+Vi bör nu se 3 commits om vi i terminalen skriver:
+```bash
+git log --oneline
+```
+
+>Tips: Du kan använda en .gitignore-fil från
+>era inda-repon. Dessa är fyllda av
+>filtyper vi helst vill ignorera.
+
+### Förgrening
+Kompilera och kör programmet `GitImportance.java` igen.
+Läser vi noggrant så noterar vi att det som skrivs ut inte är helt korrekt.
+Låt oss skapa en gren, där vi kan arbeta på en lösning utan att det påverkar
+vår ursprungliga kod.
+
+Skapa en branch som heter `fixaText` genom att skriva följande i terminalen:
+
+`git branch fixaText`.
+
+För att se att vår gren faktiskt har skapats. Skriv följande i terminalen:
+
+`git branch`
+
+Vi bör få något som ser ut såhär:
+```bash
+  fixaText
+* master
+```
+
+Asterisken betyder att vi för närvarande är på master-grenen. För att byta till vår nya gren `fixaTest`
+skriver vi:
+
+`git switch fixaText`
+
+Kör sedan 
+
+`git branch` 
+
+Dubbelkolla att asterisken befinner sig på vår nya gren:
+```bash
+* fixaText
+  master
+```
+
+Låt oss nu fixa texten! I filen `GitImportance.java`, byt ut `"difficult"` mot `"easy"`
+och `"only one developer"` mot `"multiple developers"`.
+
+Efter att ha utfört ändringen, kompilera och kör programmet. Kontrollera
+att utskriften är korrekt. Skriv sedan 
+
+`git status` 
+
+i terminalen. Som svar bör vi få:
+```bash
+On branch fixaText
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   GitImportance.java
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+Vi ser att Git har noterat förändringen i `GitImportance.java`.
+För att se exakt vad som ändrats kan vi köra `git diff`.
+
+Vi kan nu förbereda för incheckning (stage:a) och checka in vår rättning. Vi utför då som tidigare
+följande två steg i terminalen.
+```bash
+git add GitImportance.java
+git commit -m "Rättade texten i GitImportance.java"
+```
+
+Vi har nu arbetat i vår gren `fixaText` och vet att vi har rättat texten där. 
+Men hur ser det ut i `master`-grenen? Vi byter till `master`-grenen i terminalen genom att skriva
+
+`git switch master`
+
+Testa sedan att kompilera och köra `GitImportance.java`.
+
+Vi ser att texten här inte är rättad, vilket inte är så konstigt, eftersom vår
+rättade version finns i en annan branch `fixText`.
+
+Nu vill vi sammanslå (merge:a) vår rättade text i `fixaText`-grenen till vår `master`-gren. Detta gör vi genom att i terminalen skriva:
+
+```brash
+git merge -m "Sammanslår fixaText med master" fixaText
+```
+Terminalen bör svara med:
+```bash
+Updating 14ccad4..8e69362
+Fast-forward (no commit created; -m option ignored)
+ GitImportance.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+ ```
+
+Kompilera och kör nu programmet i master-branchen och kontrollera att du nu får rätt utskrift.
+
+Eftersom vi är färdiga med `fixaText`-grenen så kan vi radera den
+genom att skriva följande i terminalen:
+```bash
+git branch -d fixaText
+```
+Kontrollera nu att `fixaText`-grenen är raderad genom att skriva `git branch`.
+
+### Merge conflict
+Någon har sagt att variabeln `s` i filen `GitImportance.java`
+är otydlig. Vi bestämmer oss därför för att döpa om den 
+till `text`. Vi skapar därför en ny gren genom att i terminalen skriva:
+
+```bash
+git switch -c variabelByte
+```
+
+Notera att vi här både skapar och byter till vår nya gren i ett kommando.
+
+Ändra filen `GitImportance.java` så att det ser ut såhär:
+
+```java
+import java.util.*;
+
+public class GitImportance{ 
+    public static void main(String[] args) {
+        StringBuilder text = new StringBuilder();
+        text.append("Git allows for version control, making it easy to track changes in code.\n");
+        text.append("With Git, multiple developers can collaborate on a codebase ");
+        text.append("without interfering with each other's work.\n");
+        
+        System.out.println(text.toString());
+    }
+}
+```
+
+Kompilera och kör programmet för att kontrollera att det funkar.
+
+Vi förbereder för incheckning (stage:ar) och checkar in genom att i terminalen skriva:
+
+```bash
+git add GitImportance.java
+
+git commit -m "döpte om variabeln s till text"
+```
+
+Vi har nu döpt om vår variabel och byter därför tillbaka till master-grenen:
+
+```bash
+git switch master
+```
+
+Vi kommer nu på att vi vill lägga till en rad med information om Git i vårt program.
+Vi är något ouppmärksamma och öppnar därför filen `GitImportance.java` i master-grenen -
+det vill säga den gren vi nu befinner oss i - och lägger till raden i filen `GitImportance.java`:
+
+```java
+s.append("Using Git can increase productivity by streamlining workflows and reducing the time spent on manual tasks.\n");
+```
+
+Kompilera och kör programmet för att se att den nya rader skrivs ut.
+
+Sedan förbereder vi för incheckning och checkar in genom att skriva följande i terminalen:
+
+```bash
+git add GitImportance.java
+
+git commit -m "la till en rad i GitImportance.java"
+```
+
+Vi kommer nu på att vi inte har slagit ihop (merge:at) våra två grenar.
+
+Vi slår därför ihop grenen `variabelByte` till `master`-grenen genom att
+skriva följande i terminalen:
+
+```bash
+git merge variabelByte
+```
+
+Git säger dock:
+```bash
+CONFLICT (content): Merge conflict in GitImportance.java
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+Eftersom vi har ändringar i båda våra grenar `master` och `variabelByte` så får vi
+en `merge conflict`. Om du öppnar filen i exempelvis VSC, eller din vanliga texthanterare, så
+bör du se kod från båda grenar. Lös merge-konflikten så att vi både har variabeln `s` döpt till `text` och
+att vi får med vår nya rad. När du har löst detta kan du gå tillbaka till terminalen och skriva:
+
+```bash
+git add GitImportance.java
+
+git commit -m "la till en rad i GitImportance.java och döpte om variabeln s till text"
+```
+
+Kontrollera nu att filen innehåller det den ska. Kompilera sedan och kör programmet. Du kan sedan radera grenen 
+`variabelByte`.
+
+## Vidare läsning
 
 För mer info om Git, kolla in de här länkarna:
 
